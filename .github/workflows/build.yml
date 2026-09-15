@@ -16,34 +16,16 @@ jobs:
 
     steps:
 
-      # ============================================================
-      # CHECKOUT
-      # ============================================================
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ============================================================
-      # JAVA 17
-      # ============================================================
       - name: Setup Java 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      # ============================================================
-      # GRADLE 8.9
-      # ============================================================
-      - name: Setup Gradle 8.9
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-
-      # ============================================================
-      # ANDROID SDK
-      # O RUNNER JÁ POSSUI O SDK
-      # ============================================================
-      - name: Configure Android SDK
+      - name: Verify Android SDK
         shell: bash
         run: |
           set -e
@@ -55,29 +37,19 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_HOME"
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
 
-          if [ -d "$ANDROID_HOME" ]; then
-            echo "✓ Android SDK encontrado"
-          elif [ -d "$ANDROID_SDK_ROOT" ]; then
-            echo "✓ Android SDK encontrado"
-          else
-            echo "✕ Android SDK não encontrado"
-            exit 1
-          fi
+          test -d "$ANDROID_HOME"
 
-      # ============================================================
-      # VERIFICAR PROJETO
-      # ============================================================
-      - name: Verify Android project
+          echo "✓ Android SDK encontrado"
+
+      - name: Verify HOMEBD project
         shell: bash
         run: |
           set -e
 
           echo "========================================"
-          echo "HOMEBD ANDROID PROJECT"
+          echo "HOMEBD PROJECT"
           echo "========================================"
 
-          echo ""
-          echo "Diretório:"
           pwd
 
           echo ""
@@ -85,9 +57,7 @@ jobs:
           find . -maxdepth 6 -type f | sort
 
           echo ""
-          echo "========================================"
-          echo "VERIFICAÇÃO"
-          echo "========================================"
+          echo "Verificação:"
 
           test -f settings.gradle.kts
           test -f build.gradle.kts
@@ -100,12 +70,14 @@ jobs:
           echo "✓ AndroidManifest.xml"
 
           echo ""
-          echo "✓ PROJETO ANDROID VALIDADO"
+          echo "✓ HOMEBD VALIDADO"
 
-      # ============================================================
-      # BUILD
-      # ============================================================
-      - name: Build Debug APK
+      - name: Show Gradle version
+        shell: bash
+        run: |
+          gradle --version
+
+      - name: Build HOMEBD Debug APK
         shell: bash
         run: |
           set -e
@@ -117,17 +89,13 @@ jobs:
           gradle \
             --no-daemon \
             --stacktrace \
-            --info \
             assembleDebug
 
-      # ============================================================
-      # LOCALIZAR APK
-      # ============================================================
       - name: Find APK
         shell: bash
         run: |
           echo "========================================"
-          echo "APK GERADO"
+          echo "APK"
           echo "========================================"
 
           find . \
@@ -135,12 +103,10 @@ jobs:
             -name "*.apk" \
             -print
 
-      # ============================================================
-      # GUARDAR APK COMO ARTIFACT
-      # ============================================================
-      - name: Upload HOMEBD APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: HOMEBD-V2-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: |
+            app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
