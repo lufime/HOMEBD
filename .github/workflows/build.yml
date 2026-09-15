@@ -1,0 +1,64 @@
+name: Build HOMEBD APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build HOMEBD
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Check project
+        run: |
+          echo "=== HOMEBD PROJECT ==="
+          pwd
+          echo "--- Files ---"
+          find . -maxdepth 4 -type f | sort
+
+      - name: Make Gradle executable
+        run: |
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+          fi
+
+      - name: Build Debug APK
+        run: |
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleDebug --stacktrace
+          else
+            echo "Gradle wrapper not found"
+            exit 1
+          fi
+
+      - name: Find APK
+        run: |
+          echo "=== APK FILES ==="
+          find . -type f -name "*.apk" -print
+
+      - name: Upload HOMEBD APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HOMEBD-debug-apk
+          path: |
+            **/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
