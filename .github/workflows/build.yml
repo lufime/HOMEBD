@@ -16,7 +16,7 @@ jobs:
 
     steps:
 
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Java 17
@@ -25,42 +25,70 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Show project
+      - name: Extract HOMEBD project
+        shell: bash
         run: |
-          echo "=== HOMEBD ==="
+          echo "=== BEFORE EXTRACTION ==="
+          ls -la
+
+          ZIP="HOMEBD_V1.zip"
+
+          if [ ! -f "$ZIP" ]; then
+            echo "ERROR: $ZIP not found"
+            exit 1
+          fi
+
+          mkdir -p /tmp/homebd
+
+          unzip -q -o "$ZIP" -d /tmp/homebd
+
+          echo "=== EXTRACTED ==="
+          find /tmp/homebd -maxdepth 4 -type f | sort
+
+          SETTINGS=$(find /tmp/homebd -type f \
+            \( -name "settings.gradle.kts" -o -name "settings.gradle" \) \
+            | head -n 1)
+
+          if [ -z "$SETTINGS" ]; then
+            echo "ERROR: settings.gradle(.kts) not found"
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$SETTINGS")
+
+          echo "Gradle project:"
+          echo "$PROJECT_DIR"
+
+          cp -R "$PROJECT_DIR"/. .
+
+      - name: Verify Gradle project
+        run: |
+          echo "=== PROJECT ROOT ==="
           pwd
           ls -la
-          echo "--- Gradle ---"
-          find . -maxdepth 3 -type f \
-            \( -name "*.gradle" \
-            -o -name "*.gradle.kts" \
-            -o -name "gradle-wrapper.properties" \) \
-            -print
+
+          test -f settings.gradle.kts || \
+          test -f settings.gradle
+
+          test -f build.gradle.kts || \
+          test -f build.gradle
 
       - name: Install Gradle
         run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.9-bin.zip \
+          wget -q \
+            https://services.gradle.org/distributions/gradle-8.9-bin.zip \
             -O /tmp/gradle.zip
 
           sudo unzip -q /tmp/gradle.zip -d /opt
 
-          echo "/opt/gradle-8.9/bin" >> $GITHUB_PATH
+          echo "/opt/gradle-8.9/bin" >> "$GITHUB_PATH"
 
           /opt/gradle-8.9/bin/gradle --version
 
       - name: Create Gradle Wrapper
         run: |
-          if [ ! -f "./gradlew" ]; then
-            gradle wrapper --gradle-version 8.9
-          fi
-
+          gradle wrapper --gradle-version 8.9
           chmod +x ./gradlew
-
-      - name: Check Android SDK
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          ls "$ANDROID_SDK_ROOT"
 
       - name: Build HOMEBD
         run: |
@@ -68,7 +96,7 @@ jobs:
 
       - name: Find APK
         run: |
-          echo "=== APK ==="
+          echo "=== GENERATED APK ==="
           find . -type f -name "*.apk" -print
 
       - name: Upload HOMEBD APK
