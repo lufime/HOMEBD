@@ -1,4 +1,4 @@
-name: Build HOMEBD
+name: Build HOMEBD APK
 
 on:
   workflow_dispatch:
@@ -11,97 +11,118 @@ permissions:
 
 jobs:
   build:
-    name: Build HOMEBD
+    name: Build HOMEBD V2
     runs-on: ubuntu-latest
 
     steps:
 
+      # ============================================================
+      # 1. DOWNLOAD DO PROJETO
+      # ============================================================
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ============================================================
+      # 2. JAVA 17
+      # ============================================================
       - name: Setup Java 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
-      - name: Extract HOMEBD project
+      # ============================================================
+      # 3. ANDROID SDK
+      # ============================================================
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ============================================================
+      # 4. GRADLE
+      # ============================================================
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      # ============================================================
+      # 5. VERIFICAR PROJETO
+      # ============================================================
+      - name: Verify Android project
         shell: bash
         run: |
-          echo "=== BEFORE EXTRACTION ==="
-          ls -la
+          set -e
 
-          ZIP="HOMEBD_V1.zip"
+          echo "========================================"
+          echo "        HOMEBD ANDROID PROJECT"
+          echo "========================================"
 
-          if [ ! -f "$ZIP" ]; then
-            echo "ERROR: $ZIP not found"
-            exit 1
-          fi
-
-          mkdir -p /tmp/homebd
-
-          unzip -q -o "$ZIP" -d /tmp/homebd
-
-          echo "=== EXTRACTED ==="
-          find /tmp/homebd -maxdepth 4 -type f | sort
-
-          SETTINGS=$(find /tmp/homebd -type f \
-            \( -name "settings.gradle.kts" -o -name "settings.gradle" \) \
-            | head -n 1)
-
-          if [ -z "$SETTINGS" ]; then
-            echo "ERROR: settings.gradle(.kts) not found"
-            exit 1
-          fi
-
-          PROJECT_DIR=$(dirname "$SETTINGS")
-
-          echo "Gradle project:"
-          echo "$PROJECT_DIR"
-
-          cp -R "$PROJECT_DIR"/. .
-
-      - name: Verify Gradle project
-        run: |
-          echo "=== PROJECT ROOT ==="
+          echo ""
+          echo "Diretório atual:"
           pwd
-          ls -la
 
-          test -f settings.gradle.kts || \
-          test -f settings.gradle
+          echo ""
+          echo "Ficheiros do projeto:"
+          find . -maxdepth 6 -type f | sort
 
-          test -f build.gradle.kts || \
-          test -f build.gradle
+          echo ""
+          echo "========================================"
+          echo "        VERIFICAR GRADLE"
+          echo "========================================"
 
-      - name: Install Gradle
+          test -f settings.gradle.kts
+          test -f build.gradle.kts
+          test -f app/build.gradle.kts
+          test -f app/src/main/AndroidManifest.xml
+
+          echo ""
+          echo "✓ settings.gradle.kts encontrado"
+          echo "✓ build.gradle.kts encontrado"
+          echo "✓ app/build.gradle.kts encontrado"
+          echo "✓ AndroidManifest.xml encontrado"
+
+          echo ""
+          echo "✓ PROJETO ANDROID VALIDADO"
+
+      # ============================================================
+      # 6. BUILD APK
+      # ============================================================
+      - name: Build Debug APK
+        shell: bash
         run: |
-          wget -q \
-            https://services.gradle.org/distributions/gradle-8.9-bin.zip \
-            -O /tmp/gradle.zip
+          set -e
 
-          sudo unzip -q /tmp/gradle.zip -d /opt
+          echo "========================================"
+          echo "          BUILD HOMEBD V2"
+          echo "========================================"
 
-          echo "/opt/gradle-8.9/bin" >> "$GITHUB_PATH"
+          gradle \
+            --no-daemon \
+            --stacktrace \
+            --info \
+            assembleDebug
 
-          /opt/gradle-8.9/bin/gradle --version
-
-      - name: Create Gradle Wrapper
+      # ============================================================
+      # 7. PROCURAR APK
+      # ============================================================
+      - name: Find generated APK
+        shell: bash
         run: |
-          gradle wrapper --gradle-version 8.9
-          chmod +x ./gradlew
+          echo "========================================"
+          echo "             APK GERADO"
+          echo "========================================"
 
-      - name: Build HOMEBD
-        run: |
-          ./gradlew clean assembleDebug --stacktrace
+          find . \
+            -type f \
+            -name "*.apk" \
+            -print
 
-      - name: Find APK
-        run: |
-          echo "=== GENERATED APK ==="
-          find . -type f -name "*.apk" -print
-
+      # ============================================================
+      # 8. UPLOAD APK
+      # ============================================================
       - name: Upload HOMEBD APK
         uses: actions/upload-artifact@v4
         with:
-          name: HOMEBD-debug
-          path: "**/build/outputs/apk/debug/*.apk"
+          name: HOMEBD-V2-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
