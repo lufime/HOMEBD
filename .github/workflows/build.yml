@@ -11,29 +11,20 @@ permissions:
 
 jobs:
   build:
-    name: Build HOMEBD V2
+    name: Build HOMEBD V3
     runs-on: ubuntu-latest
 
     steps:
 
-      # ============================================================
-      # 1. CHECKOUT
-      # ============================================================
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ============================================================
-      # 2. JAVA 17
-      # ============================================================
       - name: Setup Java 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      # ============================================================
-      # 3. ANDROID SDK
-      # ============================================================
       - name: Verify Android SDK
         shell: bash
         run: |
@@ -50,24 +41,23 @@ jobs:
 
           echo "✓ Android SDK encontrado"
 
-      # ============================================================
-      # 4. ENCONTRAR ZIP DO HOMEBD
-      # ============================================================
-      - name: Find HOMEBD ZIP
+      - name: Find HOMEBD V3 ZIP
         shell: bash
         run: |
           set -e
 
           echo "========================================"
-          echo "PROCURAR PROJETO HOMEBD"
+          echo "PROCURAR HOMEBD V3"
           echo "========================================"
 
           find . -maxdepth 2 -type f -name "*.zip" -print
 
-          ZIP=$(find . -maxdepth 2 -type f -name "HOMEBD_V2_BUILD_FIXED.zip" | head -n 1)
+          ZIP=$(find . -maxdepth 2 -type f \
+            -name "HOMEBD_V3_VERTICAL_SCROLL_FIXED.zip" \
+            | head -n 1)
 
           if [ -z "$ZIP" ]; then
-            echo "✕ HOMEBD_V2_BUILD_FIXED.zip não encontrado"
+            echo "✕ HOMEBD_V3_VERTICAL_SCROLL_FIXED.zip não encontrado"
             exit 1
           fi
 
@@ -76,29 +66,24 @@ jobs:
 
           echo "HOMEBD_ZIP=$ZIP" >> "$GITHUB_ENV"
 
-      # ============================================================
-      # 5. EXTRAIR PROJETO
-      # ============================================================
-      - name: Extract HOMEBD project
+      - name: Extract HOMEBD V3
         shell: bash
         run: |
           set -e
 
           echo "========================================"
-          echo "EXTRAIR HOMEBD"
+          echo "EXTRAIR HOMEBD V3"
           echo "========================================"
 
+          rm -rf homebd_project
           mkdir -p homebd_project
 
           unzip -o "$HOMEBD_ZIP" -d homebd_project
 
           echo ""
-          echo "Conteúdo extraído:"
+          echo "Projeto extraído:"
           find homebd_project -maxdepth 6 -type f | sort
 
-      # ============================================================
-      # 6. DETETAR RAIZ DO PROJETO
-      # ============================================================
       - name: Locate Android project
         shell: bash
         run: |
@@ -120,14 +105,11 @@ jobs:
 
           PROJECT_DIR=$(dirname "$SETTINGS")
 
-          echo "Projeto encontrado em:"
+          echo "✓ Projeto encontrado:"
           echo "$PROJECT_DIR"
 
           echo "HOMEBD_PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
-      # ============================================================
-      # 7. VALIDAR PROJETO
-      # ============================================================
       - name: Verify Android project
         shell: bash
         run: |
@@ -136,17 +118,8 @@ jobs:
           cd "$HOMEBD_PROJECT_DIR"
 
           echo "========================================"
-          echo "VALIDAÇÃO HOMEBD"
+          echo "VALIDAR HOMEBD V3"
           echo "========================================"
-
-          pwd
-
-          echo ""
-          echo "Ficheiros:"
-          find . -maxdepth 6 -type f | sort
-
-          echo ""
-          echo "Verificar ficheiros principais:"
 
           test -f settings.gradle.kts
           test -f build.gradle.kts
@@ -159,20 +132,14 @@ jobs:
           echo "✓ AndroidManifest.xml"
 
           echo ""
-          echo "✓ PROJETO HOMEBD VALIDADO"
+          echo "✓ PROJETO HOMEBD V3 VALIDADO"
 
-      # ============================================================
-      # 8. VERIFICAR GRADLE
-      # ============================================================
-      - name: Show Gradle version
+      - name: Show Gradle
         shell: bash
         run: |
           gradle --version
 
-      # ============================================================
-      # 9. BUILD APK
-      # ============================================================
-      - name: Build HOMEBD Debug APK
+      - name: Build HOMEBD V3 Debug APK
         shell: bash
         run: |
           set -e
@@ -180,7 +147,7 @@ jobs:
           cd "$HOMEBD_PROJECT_DIR"
 
           echo "========================================"
-          echo "BUILD HOMEBD V2"
+          echo "BUILD HOMEBD V3"
           echo "========================================"
 
           gradle \
@@ -188,10 +155,7 @@ jobs:
             --stacktrace \
             assembleDebug
 
-      # ============================================================
-      # 10. PROCURAR APK
-      # ============================================================
-      - name: Find generated APK
+      - name: Find APK
         shell: bash
         run: |
           echo "========================================"
@@ -203,13 +167,9 @@ jobs:
             -name "*.apk" \
             -print
 
-      # ============================================================
-      # 11. UPLOAD APK
-      # ============================================================
-      - name: Upload HOMEBD APK
+      - name: Upload HOMEBD V3 APK
         uses: actions/upload-artifact@v4
         with:
-          name: HOMEBD-V2-debug-apk
-          path: |
-            homebd_project/**/build/outputs/apk/debug/*.apk
+          name: HOMEBD-V3-debug-apk
+          path: homebd_project/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
