@@ -11,20 +11,29 @@ permissions:
 
 jobs:
   build:
-    name: Build HOMEBD V3
+    name: Build HOMEBD
     runs-on: ubuntu-latest
 
     steps:
 
+      # ============================================================
+      # CHECKOUT
+      # ============================================================
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ============================================================
+      # JAVA 17
+      # ============================================================
       - name: Setup Java 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
+      # ============================================================
+      # ANDROID SDK
+      # ============================================================
       - name: Verify Android SDK
         shell: bash
         run: |
@@ -41,38 +50,46 @@ jobs:
 
           echo "✓ Android SDK encontrado"
 
-      - name: Find HOMEBD V3 ZIP
+      # ============================================================
+      # ENCONTRAR AUTOMATICAMENTE O ZIP HOMEBD
+      # ============================================================
+      - name: Find HOMEBD ZIP
         shell: bash
         run: |
           set -e
 
           echo "========================================"
-          echo "PROCURAR HOMEBD V3"
+          echo "PROCURAR ZIP HOMEBD"
           echo "========================================"
 
-          find . -maxdepth 2 -type f -name "*.zip" -print
+          find . -maxdepth 2 -type f -name "HOMEBD_*.zip" -print
 
           ZIP=$(find . -maxdepth 2 -type f \
-            -name "HOMEBD_V3_VERTICAL_SCROLL_FIXED.zip" \
-            | head -n 1)
+            -name "HOMEBD_*.zip" \
+            | sort -V \
+            | tail -n 1)
 
           if [ -z "$ZIP" ]; then
-            echo "✕ HOMEBD_V3_VERTICAL_SCROLL_FIXED.zip não encontrado"
+            echo "✕ Nenhum ZIP HOMEBD encontrado"
             exit 1
           fi
 
-          echo "✓ ZIP encontrado:"
+          echo ""
+          echo "✓ ZIP selecionado:"
           echo "$ZIP"
 
           echo "HOMEBD_ZIP=$ZIP" >> "$GITHUB_ENV"
 
-      - name: Extract HOMEBD V3
+      # ============================================================
+      # EXTRAIR
+      # ============================================================
+      - name: Extract HOMEBD
         shell: bash
         run: |
           set -e
 
           echo "========================================"
-          echo "EXTRAIR HOMEBD V3"
+          echo "EXTRAIR HOMEBD"
           echo "========================================"
 
           rm -rf homebd_project
@@ -81,9 +98,11 @@ jobs:
           unzip -o "$HOMEBD_ZIP" -d homebd_project
 
           echo ""
-          echo "Projeto extraído:"
-          find homebd_project -maxdepth 6 -type f | sort
+          echo "✓ Projeto extraído"
 
+      # ============================================================
+      # LOCALIZAR PROJETO ANDROID
+      # ============================================================
       - name: Locate Android project
         shell: bash
         run: |
@@ -110,6 +129,9 @@ jobs:
 
           echo "HOMEBD_PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
+      # ============================================================
+      # VALIDAR PROJETO
+      # ============================================================
       - name: Verify Android project
         shell: bash
         run: |
@@ -118,7 +140,7 @@ jobs:
           cd "$HOMEBD_PROJECT_DIR"
 
           echo "========================================"
-          echo "VALIDAR HOMEBD V3"
+          echo "VALIDAR PROJETO HOMEBD"
           echo "========================================"
 
           test -f settings.gradle.kts
@@ -132,14 +154,20 @@ jobs:
           echo "✓ AndroidManifest.xml"
 
           echo ""
-          echo "✓ PROJETO HOMEBD V3 VALIDADO"
+          echo "✓ PROJETO VALIDADO"
 
+      # ============================================================
+      # GRADLE
+      # ============================================================
       - name: Show Gradle
         shell: bash
         run: |
           gradle --version
 
-      - name: Build HOMEBD V3 Debug APK
+      # ============================================================
+      # BUILD
+      # ============================================================
+      - name: Build HOMEBD Debug APK
         shell: bash
         run: |
           set -e
@@ -147,7 +175,7 @@ jobs:
           cd "$HOMEBD_PROJECT_DIR"
 
           echo "========================================"
-          echo "BUILD HOMEBD V3"
+          echo "BUILD HOMEBD"
           echo "========================================"
 
           gradle \
@@ -155,7 +183,10 @@ jobs:
             --stacktrace \
             assembleDebug
 
-      - name: Find APK
+      # ============================================================
+      # ENCONTRAR APK
+      # ============================================================
+      - name: Find generated APK
         shell: bash
         run: |
           echo "========================================"
@@ -167,9 +198,13 @@ jobs:
             -name "*.apk" \
             -print
 
-      - name: Upload HOMEBD V3 APK
+      # ============================================================
+      # GUARDAR APK
+      # ============================================================
+      - name: Upload HOMEBD APK
         uses: actions/upload-artifact@v4
         with:
-          name: HOMEBD-V3-debug-apk
-          path: homebd_project/**/build/outputs/apk/debug/*.apk
+          name: HOMEBD-debug-apk
+          path: |
+            homebd_project/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
