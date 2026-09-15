@@ -17,13 +17,13 @@ jobs:
     steps:
 
       # ============================================================
-      # 1. DOWNLOAD DO PROJETO
+      # CHECKOUT
       # ============================================================
       - name: Checkout
         uses: actions/checkout@v4
 
       # ============================================================
-      # 2. JAVA 17
+      # JAVA 17
       # ============================================================
       - name: Setup Java 17
         uses: actions/setup-java@v5
@@ -32,13 +32,7 @@ jobs:
           java-version: '17'
 
       # ============================================================
-      # 3. ANDROID SDK
-      # ============================================================
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      # ============================================================
-      # 4. GRADLE
+      # GRADLE 8.9
       # ============================================================
       - name: Setup Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
@@ -46,7 +40,32 @@ jobs:
           gradle-version: '8.9'
 
       # ============================================================
-      # 5. VERIFICAR PROJETO
+      # ANDROID SDK
+      # O RUNNER JÁ POSSUI O SDK
+      # ============================================================
+      - name: Configure Android SDK
+        shell: bash
+        run: |
+          set -e
+
+          echo "========================================"
+          echo "ANDROID SDK"
+          echo "========================================"
+
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+
+          if [ -d "$ANDROID_HOME" ]; then
+            echo "✓ Android SDK encontrado"
+          elif [ -d "$ANDROID_SDK_ROOT" ]; then
+            echo "✓ Android SDK encontrado"
+          else
+            echo "✕ Android SDK não encontrado"
+            exit 1
+          fi
+
+      # ============================================================
+      # VERIFICAR PROJETO
       # ============================================================
       - name: Verify Android project
         shell: bash
@@ -54,20 +73,20 @@ jobs:
           set -e
 
           echo "========================================"
-          echo "        HOMEBD ANDROID PROJECT"
+          echo "HOMEBD ANDROID PROJECT"
           echo "========================================"
 
           echo ""
-          echo "Diretório atual:"
+          echo "Diretório:"
           pwd
 
           echo ""
-          echo "Ficheiros do projeto:"
+          echo "Ficheiros:"
           find . -maxdepth 6 -type f | sort
 
           echo ""
           echo "========================================"
-          echo "        VERIFICAR GRADLE"
+          echo "VERIFICAÇÃO"
           echo "========================================"
 
           test -f settings.gradle.kts
@@ -75,17 +94,16 @@ jobs:
           test -f app/build.gradle.kts
           test -f app/src/main/AndroidManifest.xml
 
-          echo ""
-          echo "✓ settings.gradle.kts encontrado"
-          echo "✓ build.gradle.kts encontrado"
-          echo "✓ app/build.gradle.kts encontrado"
-          echo "✓ AndroidManifest.xml encontrado"
+          echo "✓ settings.gradle.kts"
+          echo "✓ build.gradle.kts"
+          echo "✓ app/build.gradle.kts"
+          echo "✓ AndroidManifest.xml"
 
           echo ""
           echo "✓ PROJETO ANDROID VALIDADO"
 
       # ============================================================
-      # 6. BUILD APK
+      # BUILD
       # ============================================================
       - name: Build Debug APK
         shell: bash
@@ -93,7 +111,7 @@ jobs:
           set -e
 
           echo "========================================"
-          echo "          BUILD HOMEBD V2"
+          echo "BUILD HOMEBD V2"
           echo "========================================"
 
           gradle \
@@ -103,13 +121,13 @@ jobs:
             assembleDebug
 
       # ============================================================
-      # 7. PROCURAR APK
+      # LOCALIZAR APK
       # ============================================================
-      - name: Find generated APK
+      - name: Find APK
         shell: bash
         run: |
           echo "========================================"
-          echo "             APK GERADO"
+          echo "APK GERADO"
           echo "========================================"
 
           find . \
@@ -118,7 +136,7 @@ jobs:
             -print
 
       # ============================================================
-      # 8. UPLOAD APK
+      # GUARDAR APK COMO ARTIFACT
       # ============================================================
       - name: Upload HOMEBD APK
         uses: actions/upload-artifact@v4
