@@ -75,11 +75,23 @@ jobs:
 
           echo "PROJECT_DIR=$PROJECT" >> "$GITHUB_ENV"
 
-      # 5 — Instalar Gradle
-      - name: Setup Gradle
+      # 5 — Instalar Gradle 8.13
+      - name: Setup Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
 
-      # 6 — Configurar Android SDK
+      # 6 — Verificar ferramentas
+      - name: Check build tools
+        shell: bash
+        run: |
+          echo "=== JAVA ==="
+          java -version
+
+          echo "=== GRADLE ==="
+          gradle --version
+
+      # 7 — Configurar Android SDK
       - name: Configure Android SDK
         shell: bash
         run: |
@@ -110,7 +122,21 @@ jobs:
             "platforms;android-35" \
             "build-tools;35.0.0"
 
-      # 7 — Compilar HOMEBD
+      # 8 — Mostrar estrutura do projeto
+      - name: Check Android project
+        shell: bash
+        run: |
+          set -e
+
+          cd "$PROJECT_DIR"
+
+          echo "=== DIRETÓRIO DO PROJETO ==="
+          pwd
+
+          echo "=== FICHEIROS ==="
+          find . -maxdepth 3 -type f | sort
+
+      # 9 — Compilar HOMEBD
       - name: Build HOMEBD
         shell: bash
         run: |
@@ -122,17 +148,36 @@ jobs:
           ls -la
 
           if [ -f gradlew ]; then
+            echo "Gradle Wrapper encontrado."
+
             chmod +x gradlew
+
             ./gradlew assembleDebug \
               --stacktrace \
               --no-daemon
           else
+            echo "Gradle Wrapper não encontrado."
+            echo "Usando Gradle 8.13 instalado pelo workflow."
+
             gradle assembleDebug \
               --stacktrace \
               --no-daemon
           fi
 
-      # 8 — Publicar APK
+      # 10 — Procurar APK gerado
+      - name: Find generated APK
+        shell: bash
+        run: |
+          set -e
+
+          echo "=== APK GERADO ==="
+
+          find "$PROJECT_DIR" \
+            -type f \
+            -name "*.apk" \
+            -print
+
+      # 11 — Publicar APK
       - name: Upload HOMEBD APK
         uses: actions/upload-artifact@v4
         with:
@@ -140,3 +185,16 @@ jobs:
           path: |
             **/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+          retention-days: 30
+
+      # 12 — Guardar relatórios se houver erro
+      - name: Upload build reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: HOMEBD-build-reports
+          path: |
+            **/app/build/reports/**
+            **/app/build/outputs/logs/**
+          if-no-files-found: ignore
+          retention-days: 14
