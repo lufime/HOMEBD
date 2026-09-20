@@ -1,5 +1,0 @@
-HOMEBD
-Beta 1.0.0.0
-Developer: lufime
-Copyright © 2026 lufime — HOMEBD
-License: MIT
