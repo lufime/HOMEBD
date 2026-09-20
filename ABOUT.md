@@ -4,7 +4,7 @@
 
 **HOMEBD — Home Assistant Onboard Monitoring & Board Data**
 
-**Version:** Beta 1.0.0  
+**Version:** Beta 1.0.1  
 **Developer:** lufime
 
 ## Purpose

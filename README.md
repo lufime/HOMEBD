@@ -4,7 +4,7 @@
 
 Independent Android application for read-only OBD-II vehicle monitoring and diagnostics, with optional Home Assistant integration.
 
-**Current release: Beta 1.0.0**
+**Current release: Beta 1.0.1**
 
 ## Features
 
@@ -49,4 +49,4 @@ See [LICENSES.md](LICENSES.md) for external component licences and official lice
 
 ## Beta status
 
-HOMEBD Beta 1.0.0 is a development release. Diagnostic coverage, supported parameters, interface elements and integration behaviour may change in future releases.
+HOMEBD Beta 1.0.1 is a development release. Diagnostic coverage, supported parameters, interface elements and integration behaviour may change in future releases.

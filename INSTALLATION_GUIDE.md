@@ -1,6 +1,6 @@
 # HOMEBD — Installation Guide
 
-**Version: Beta 1.0.0**
+**Version: Beta 1.0.1**
 
 ## 1. Requirements
 
@@ -12,7 +12,7 @@
 
 ## 2. Install HOMEBD
 
-1. Obtain the HOMEBD Beta 1.0.0 APK from the project release.
+1. Obtain the HOMEBD Beta 1.0.1 APK from the project release.
 2. Install the APK on Android.
 3. If Android requests permission to install an APK from the selected source, allow it.
 4. Launch **HOMEBD**.
@@ -94,4 +94,4 @@ HOMEBD is designed for read-only operation and does not intentionally perform ve
 
 ## 10. Beta notice
 
-Beta 1.0.0 is a development release. Features, supported parameters, interface elements and integration behaviour may change in future releases.
+Beta 1.0.1 is a development release. Features, supported parameters, interface elements and integration behaviour may change in future releases.

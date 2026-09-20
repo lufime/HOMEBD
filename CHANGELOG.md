@@ -1,6 +1,6 @@
 # HOMEBD CHANGELOG
 
-## Beta 1.0.0
+## Beta 1.0.1
 
 Initial documented HOMEBD Beta release.
 
@@ -20,7 +20,7 @@ Initial documented HOMEBD Beta release.
 - HOMEBD entity namespace: `sensor.homebd_*`.
 
 ### Documentation
-- Documentation reset at Beta 1.0.0.
+- Documentation reset at Beta 1.0.1.
 - English installation guide.
 - Project overview and About documentation.
 - Licensing documentation.
@@ -32,8 +32,13 @@ Initial documented HOMEBD Beta release.
 
 ## Future releases
 
-Changes made after Beta 1.0.0 will be recorded here.
+Changes made after Beta 1.0.1 will be recorded here.
 
 
 ## Build fix
 - Fixed an invalid Kotlin string interpolation in `MainActivity.kt` that caused `Unresolved reference: label` during Kotlin compilation.
+
+### Home Assistant telemetry performance
+- Added batched `homebd/update_batch` telemetry transport over the persistent WebSocket.
+- LIVE DATA now queues the current cycle and sends supported HOMEBD sensor updates in one WebSocket message when the updated integration is installed.
+- Added capability detection so older HOMEBD integrations continue to receive individual updates.

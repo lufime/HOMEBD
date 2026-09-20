@@ -1,6 +1,6 @@
 # HOMEBD — Home Assistant Integration
 
-**Version: Beta 1.0.0**
+**Version: Beta 1.0.1**
 
 ## Overview
 
